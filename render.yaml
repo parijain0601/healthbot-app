@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: healthbot-app
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && cd frontend && npm install && npm run build && cd ..
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app_advanced:app
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: healthbot-db
+          property: connectionString
+
+  - type: pserv
+    name: healthbot-db
+    env: postgres
+    plan: free
+    postgresVersion: "15"
