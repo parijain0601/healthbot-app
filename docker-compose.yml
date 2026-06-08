@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: healthbot_user
+      POSTGRES_PASSWORD: secure_password_123
+      POSTGRES_DB: healthbot
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: postgresql://healthbot_user:secure_password_123@db:5432/healthbot
+      FLASK_ENV: development
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+
+  frontend:
+    image: node:18
+    working_dir: /app/frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app/frontend
+    command: npm start
+    environment:
+      REACT_APP_API_URL: http://localhost:5000/api
+
+volumes:
+  postgres_data:
