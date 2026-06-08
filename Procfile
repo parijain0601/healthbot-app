@@ -1,1 +1,1 @@
-web: gunicorn --bind 0.0.0.0:$PORT app_advanced:app
+web: bash build.sh && gunicorn --bind 0.0.0.0:$PORT app_advanced:app
