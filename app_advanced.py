@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
@@ -11,7 +11,7 @@ from datetime import datetime
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='frontend/build', static_url_path='')
 CORS(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://user:password@localhost/healthbot')
@@ -26,6 +26,26 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 report_processor = ReportProcessor()
 health_analyzer = HealthAnalyzer()
 hospital_recommender = HospitalRecommender()
+
+# ============ SERVE REACT FRONTEND ============
+
+@app.route('/')
+def serve_react():
+    """Serve React frontend"""
+    try:
+        return send_from_directory('frontend/build', 'index.html')
+    except:
+        return jsonify({'error': 'Frontend not built'}), 404
+
+@app.route('/<path:path>')
+def static_files(path):
+    """Serve static files"""
+    try:
+        if path and '.' in path:
+            return send_from_directory('frontend/build', path)
+        return send_from_directory('frontend/build', 'index.html')
+    except:
+        return send_from_directory('frontend/build', 'index.html')
 
 # ============ DATABASE MODELS ============
 
@@ -129,7 +149,7 @@ class HospitalRecommendation(db.Model):
             'score': self.score
         }
 
-# ============ ROUTES ============
+# ============ API ROUTES ============
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
